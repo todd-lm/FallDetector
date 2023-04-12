@@ -19,7 +19,7 @@
 // I2C
 Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
-const int buzzerPin = 5;
+const int buzzerPin = 14;
 
 // Adjust this number for the sensitivity of the 'click' force
 // this strongly depend on the range! for 16G, try 5-10
@@ -27,7 +27,7 @@ const int buzzerPin = 5;
 #define CLICKTHRESHHOLD 80
 
 // Set threshold for movement detection
-const int afterFallThreshold = 5;
+const int afterFallThreshold = 0;
 
 void setup(void) {
 #ifndef ESP8266
@@ -75,16 +75,45 @@ void loop() {
 
   //Add timer here to detect if theres no movement for a few seconds,  if there isn't assume user has fallen
 
+
+
+  tone(buzzerPin, 440, 200);
+  delay(200);
+
+  // turn off tone function for pin 6:
+  noTone(6);
+
   // Monitor accelerometer for 10 seconds
   unsigned long startTime = millis();
-  while (millis() - startTime < 10000) {
+  
+  while (millis() - startTime < 3000) {
     sensors_event_t event;
     lis.getEvent(&event);
     if (abs(event.acceleration.x) > afterFallThreshold || abs(event.acceleration.y) > afterFallThreshold || abs(event.acceleration.z) > afterFallThreshold) {
+      
       // Movement detected, trigger buzzer alarm
-      digitalWrite(buzzerPin, HIGH);
-      delay(500);
-      digitalWrite(buzzerPin, LOW);
+      Serial.print("ALARM ALARM ALARM");
+      Serial.println();
+
+      tone(buzzerPin,440,200);
+   delay(300);
+  noTone(buzzerPin);
+  tone(buzzerPin,494,500);
+  delay(300);
+  noTone(buzzerPin);
+  tone(buzzerPin,523,300);
+   delay(300);
+  noTone(buzzerPin);
+
+
+    }
+
+    else {
+      Serial.print("Alarm Cleared");
+      Serial.println();
+      return;
+
+
     }
   }
 
