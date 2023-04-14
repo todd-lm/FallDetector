@@ -89,13 +89,14 @@ void loop() {
   
   bool fallDetected = true;
 
-  while (millis() - startTime < 3000 && fallDetected ) {
+  while (millis() - startTime < 3000 && fallDetected == true) {
     sensors_event_t event;
     lis.getEvent(&event);
     if (abs(event.acceleration.x) > afterFallThreshold || abs(event.acceleration.y) > afterFallThreshold || abs(event.acceleration.z) > afterFallThreshold) {
  
       Serial.print("Alarm Cleared");
       Serial.println();
+      fallDetected = false;
       return;
 
     }
