@@ -24,10 +24,10 @@ const int buzzerPin = 14;
 // Adjust this number for the sensitivity of the 'click' force
 // this strongly depend on the range! for 16G, try 5-10
 // for 8G, try 10-20. for 4G try 20-40. for 2G try 40-80
-#define CLICKTHRESHHOLD 80
+#define CLICKTHRESHHOLD 50
 
 // Set threshold for movement detection
-const int afterFallThreshold = 0;
+const int afterFallThreshold = 300000;
 
 void setup(void) {
 #ifndef ESP8266
@@ -78,7 +78,8 @@ void loop() {
 
 
   tone(buzzerPin, 440, 200);
-  delay(200);
+  delay(600);
+  
 
   // turn off tone function for pin 6:
   noTone(6);
@@ -86,11 +87,22 @@ void loop() {
   // Monitor accelerometer for 10 seconds
   unsigned long startTime = millis();
   
-  while (millis() - startTime < 3000) {
+  bool fallDetected = true;
+
+  while (millis() - startTime < 3000 && fallDetected ) {
     sensors_event_t event;
     lis.getEvent(&event);
     if (abs(event.acceleration.x) > afterFallThreshold || abs(event.acceleration.y) > afterFallThreshold || abs(event.acceleration.z) > afterFallThreshold) {
-      
+ 
+      Serial.print("Alarm Cleared");
+      Serial.println();
+      return;
+
+    }
+
+    else {
+     
+
       // Movement detected, trigger buzzer alarm
       Serial.print("ALARM ALARM ALARM");
       Serial.println();
@@ -104,14 +116,6 @@ void loop() {
   tone(buzzerPin,523,300);
    delay(300);
   noTone(buzzerPin);
-
-
-    }
-
-    else {
-      Serial.print("Alarm Cleared");
-      Serial.println();
-      return;
 
 
     }
