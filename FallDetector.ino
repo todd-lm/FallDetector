@@ -24,10 +24,11 @@ const int buzzerPin = 14;
 // Adjust this number for the sensitivity of the 'click' force
 // this strongly depend on the range! for 16G, try 5-10
 // for 8G, try 10-20. for 4G try 20-40. for 2G try 40-80
-#define CLICKTHRESHHOLD 50
+#define CLICKTHRESHHOLD 30
+#define initialThreshold 25
 
 // Set threshold for movement detection
-const int afterFallThreshold = 300000;
+const int afterFallThreshold = 15;
 
 void setup(void) {
 #ifndef ESP8266
@@ -64,14 +65,25 @@ void setup(void) {
 
 
 void loop() {
-  uint8_t fall = lis.getClick();
-  if (fall == 0) return;
-  
-  if (! (fall & 0x30)) return;
-  Serial.print("Fall detected (0x"); Serial.print(fall, HEX); Serial.print("): ");
-  if (fall & 0x10) Serial.print(" single click");
-  if (fall & 0x20) Serial.print(" double click");
-  Serial.println();
+ 
+ uint8_t fall = 0;
+ sensors_event_t event;
+    lis.getEvent(&event);
+  Serial.println(pow((pow(event.acceleration.x,2) + pow(event.acceleration.y,2) + pow(event.acceleration.z,2)), .5));
+ if (pow((pow(event.acceleration.x,2) + pow(event.acceleration.y,2) + pow(event.acceleration.z,2)), .5) > initialThreshold) fall == 1;
+ else {
+  fall == 0;
+  return;
+ }
+
+
+// uint8_t fall = lis.getClick();
+//  if (! (fall & 0x30)) return;
+//  Serial.print("Fall detected (0x"); Serial.print(fall, HEX); Serial.print("): ");
+//  if (fall & 0x10) Serial.print(" single click");
+//  if (fall & 0x20) Serial.print(" double click");
+//    if (!fall) return;
+//   Serial.println();
 
   //Add timer here to detect if theres no movement for a few seconds,  if there isn't assume user has fallen
 
@@ -83,14 +95,15 @@ void loop() {
 
   // turn off tone function for pin 6:
   noTone(6);
+  delay(2000);
 
   // Monitor accelerometer for 10 seconds
   unsigned long startTime = millis();
   
   bool fallDetected = true;
 
-  while (millis() - startTime < 3000 && fallDetected == true) {
-    sensors_event_t event;
+  while (millis() - startTime < 3000) {
+    //sensors_event_t event;
     lis.getEvent(&event);
     if (abs(event.acceleration.x) > afterFallThreshold || abs(event.acceleration.y) > afterFallThreshold || abs(event.acceleration.z) > afterFallThreshold) {
  
@@ -100,14 +113,14 @@ void loop() {
       return;
 
     }
+    yield();
+  }
 
-    else {
-     
-
-      // Movement detected, trigger buzzer alarm
+if (fallDetected == true) {
+        // Movement detected, trigger buzzer alarm
       Serial.print("ALARM ALARM ALARM");
       Serial.println();
-
+for (int i = 0; i < 5; i++) {
       tone(buzzerPin,440,200);
    delay(300);
   noTone(buzzerPin);
@@ -117,10 +130,8 @@ void loop() {
   tone(buzzerPin,523,300);
    delay(300);
   noTone(buzzerPin);
-
-
-    }
-  }
+}
+}
 
 
   delay(100);
